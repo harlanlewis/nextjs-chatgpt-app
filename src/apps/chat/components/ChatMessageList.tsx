@@ -118,7 +118,6 @@ export function ChatMessageList(props: {
       gap={0}
       pb={4}
       px={{ xs: 1, md: 2, xl: 4 }}
-      pt={10} // space to scroll under ApplicationBar when viewing a message thread
       sx={{ 
         ...(props.sx || {}),
       }}
@@ -149,6 +148,7 @@ export function ChatMessageList(props: {
       )}
 
       { !showSystemMessages && <Box flexGrow={0}>{buttonToggleSystemPrompt()}</Box> }
+      <Box pb={10}>a</Box> {/* space to scroll under ApplicationBar when viewing a message thread. Can't be paddingTop due to iOS "cleverly" collapsing with viewport edge. Must be inside the scrollable area.  */}
 
     </Stack>
 
