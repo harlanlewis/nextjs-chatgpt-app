@@ -1,8 +1,10 @@
 import * as React from 'react';
 import { shallow } from 'zustand/shallow';
 
-import { Box, List } from '@mui/joy';
+import { Box, Button, Stack, Typography } from '@mui/joy';
 import { SxProps } from '@mui/joy/styles/types';
+
+import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 
 import { useChatLLM } from '~/modules/llms/store-llms';
 
@@ -29,7 +31,9 @@ export function ChatMessageList(props: {
   const [selectedMessages, setSelectedMessages] = React.useState<Set<string>>(new Set());
 
   // external state
-  const showSystemMessages = useUIPreferencesStore(state => state.showSystemMessages);
+  const { showSystemMessages, setShowSystemMessages } = useUIPreferencesStore(state => ({
+    showSystemMessages: state.showSystemMessages, setShowSystemMessages: state.setShowSystemMessages,
+  }), shallow);
   const { messages, editMessage, deleteMessage, historyTokenCount } = useChatStore(state => {
     const conversation = state.conversations.find(conversation => conversation.id === props.conversationId);
     return {
@@ -39,6 +43,8 @@ export function ChatMessageList(props: {
     };
   }, shallow);
   const { chatLLM } = useChatLLM();
+
+  const handleSystemMessagesToggle = () => setShowSystemMessages(!showSystemMessages);
 
   const handleMessageDelete = (messageId: string) =>
     props.conversationId && deleteMessage(props.conversationId, messageId);
@@ -92,32 +98,31 @@ export function ChatMessageList(props: {
     setSelectedMessages(new Set());
   };
 
+  const buttonToggleSystemPrompt = () => {
+    return (
+      <Button
+        onClick={handleSystemMessagesToggle}
+        size='sm' 
+        color={showSystemMessages ? 'primary' : 'neutral'}
+        variant={showSystemMessages ? 'solid' : 'outlined' }
+        startDecorator={<SettingsSuggestIcon />}
+      >
+        {showSystemMessages ? 'Hide' : 'Show'} system prompt
+      </Button>
+    )
+  }
 
-  // scrollbar style
-  // const scrollbarStyle: SxProps = {
-  //   '&::-webkit-scrollbar': {
-  //     md: {
-  //       width: 8,
-  //       background: theme.vars.palette.neutral.plainHoverBg,
-  //     },
-  //   },
-  //   '&::-webkit-scrollbar-thumb': {
-  //     background: theme.vars.palette.neutral.solidBg,
-  //     borderRadius: 6,
-  //   },
-  //   '&::-webkit-scrollbar-thumb:hover': {
-  //     background: theme.vars.palette.neutral.solidHoverBg,
-  //   },
-  // };
-
-  return (
-    <List sx={{
-      p: 0, ...(props.sx || {}),
-      // this makes sure that the the window is scrolled to the bottom (column-reverse)
-      display: 'flex', flexDirection: 'column-reverse',
-      // fix for the double-border on the last message (one by the composer, one to the bottom of the message)
-      marginBottom: '-1px',
-    }}>
+  return (<>
+    <Stack 
+      direction='column-reverse' // chat messages scroll from bottom. `.reverse()` on the map doesn't scroll as new messages come in
+      gap={0}
+      pb={4}
+      px={{ xs: 1, md: 2, xl: 4 }}
+      pt={10} // space to scroll under ApplicationBar when viewing a message thread
+      sx={{ 
+        ...(props.sx || {}),
+      }}
+    >
 
       {filteredMessages.map((message, idx) =>
         props.isMessageSelectionMode ? (
@@ -132,6 +137,7 @@ export function ChatMessageList(props: {
 
           <ChatMessage
             key={'msg-' + message.id} message={message}
+            buttonToggleSystemPrompt={buttonToggleSystemPrompt}
             isBottom={idx === 0}
             onMessageDelete={() => handleMessageDelete(message.id)}
             onMessageEdit={newText => handleMessageEdit(message.id, newText)}
@@ -142,18 +148,18 @@ export function ChatMessageList(props: {
         ),
       )}
 
-      {/* Header at the bottom because of 'row-reverse' */}
-      {props.isMessageSelectionMode && (
-        <MessagesSelectionHeader
-          hasSelected={selectedMessages.size > 0}
-          isBottom={filteredMessages.length === 0}
-          sumTokens={historyTokenCount}
-          onClose={() => props.setIsMessageSelectionMode(false)}
-          onSelectAll={handleSelectAllMessages}
-          onDeleteMessages={handleDeleteSelectedMessages}
-        />
-      )}
+      { !showSystemMessages && <Box flexGrow={0}>{buttonToggleSystemPrompt()}</Box> }
 
-    </List>
-  );
+    </Stack>
+
+    {props.isMessageSelectionMode && (
+      <MessagesSelectionHeader
+        hasSelected={selectedMessages.size > 0}
+        sumTokens={historyTokenCount}
+        onClose={() => props.setIsMessageSelectionMode(false)}
+        onSelectAll={handleSelectAllMessages}
+        onDeleteMessages={handleDeleteSelectedMessages}
+      />
+    )}
+  </>);
 }

@@ -8,6 +8,7 @@ import SchemaIcon from '@mui/icons-material/Schema';
 import ShapeLineOutlinedIcon from '@mui/icons-material/ShapeLineOutlined';
 
 import { copyToClipboard } from '~/common/util/copyToClipboard';
+import { floatingButtonsSx } from '~/common/theme';
 
 import { CodeBlock } from './Block';
 import { OpenInCodepen } from './OpenInCodepen';
@@ -67,6 +68,9 @@ export function RenderCode(props: { codeBlock: CodeBlock, sx?: SxProps }) {
         position: 'relative', mx: 0, p: 1.5, // this block gets a thicker border
         display: 'block', fontWeight: 500,
         whiteSpace: 'break-spaces',
+        wordWrap: 'break-word',
+        wordBreak: 'break-word',
+        hyphens: 'none',
         '&:hover > .code-buttons': { opacity: 1 },
         ...(props.sx || {}),
       }}>
@@ -75,21 +79,21 @@ export function RenderCode(props: { codeBlock: CodeBlock, sx?: SxProps }) {
       <Box
         className='code-buttons'
         sx={{
-          backdropFilter: 'blur(6px) grayscale(0.8)',
+          ...floatingButtonsSx,
           position: 'absolute', top: 0, right: 0, zIndex: 10, pt: 0.5, pr: 0.5,
           display: 'flex', flexDirection: 'row', gap: 1,
           opacity: 0, transition: 'opacity 0.3s',
         }}>
         {hasSVG && (
           <Tooltip title={renderSVG ? 'Show Code' : 'Render SVG'} variant='solid'>
-            <IconButton variant={renderSVG ? 'solid' : 'soft'} color='neutral' onClick={() => setShowSVG(!showSVG)}>
+            <IconButton variant={renderSVG ? 'solid' : 'soft'} color='neutral' size='sm' onClick={() => setShowSVG(!showSVG)}>
               <ShapeLineOutlinedIcon />
             </IconButton>
           </Tooltip>
         )}
         {hasPlantUML && (
           <Tooltip title={renderPlantUML ? 'Show Code' : 'Render PlantUML'} variant='solid'>
-            <IconButton variant={renderPlantUML ? 'solid' : 'soft'} color='neutral' onClick={() => setShowPlantUML(!showPlantUML)}>
+            <IconButton variant={renderPlantUML ? 'solid' : 'soft'} color='neutral' size='sm' onClick={() => setShowPlantUML(!showPlantUML)}>
               <SchemaIcon />
             </IconButton>
           </Tooltip>
@@ -101,7 +105,7 @@ export function RenderCode(props: { codeBlock: CodeBlock, sx?: SxProps }) {
           <OpenInReplit codeBlock={{ code: props.codeBlock.code, language: props.codeBlock.language || undefined }} />
         }
         <Tooltip title='Copy Code' variant='solid'>
-          <IconButton variant='outlined' color='neutral' onClick={handleCopyToClipboard}>
+          <IconButton variant='outlined' color='neutral' size='sm' onClick={handleCopyToClipboard}>
             <ContentCopyIcon />
           </IconButton>
         </Tooltip>

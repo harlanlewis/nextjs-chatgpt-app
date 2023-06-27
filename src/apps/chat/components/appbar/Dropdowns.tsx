@@ -53,6 +53,15 @@ export function Dropdowns(props: {
 
   return <>
 
+    {systemPurposeId && (
+      <AppBarDropdown
+        items={SystemPurposes} 
+        showSymbols={zenMode === 'clean'}
+        value={systemPurposeId} 
+        onChange={handleSystemPurposeChange}
+      />
+    )}
+
     <AppBarDropdown
       items={llmItems}
       value={chatLLMId} onChange={handleChatModelChange}
@@ -81,13 +90,6 @@ export function Dropdowns(props: {
 
       </>}
     />
-
-    {systemPurposeId && (
-      <AppBarDropdown
-        items={SystemPurposes} showSymbols={zenMode === 'clean'}
-        value={systemPurposeId} onChange={handleSystemPurposeChange}
-      />
-    )}
 
   </>;
 }

@@ -1,18 +1,17 @@
 import * as React from 'react';
 import { shallow } from 'zustand/shallow';
 
-import { Alert, Avatar, Box, Button, CircularProgress, IconButton, ListDivider, ListItem, ListItemDecorator, Menu, MenuItem, Stack, Theme, Tooltip, Typography, useTheme } from '@mui/joy';
+import { Alert, Avatar, Box, Button, CircularProgress, IconButton, ListDivider, ListItemDecorator, Menu, MenuItem, Stack, Theme, Tooltip, Typography, useTheme } from '@mui/joy';
 import { SxProps } from '@mui/joy/styles/types';
-import ClearIcon from '@mui/icons-material/Clear';
+import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from '@mui/icons-material/Edit';
 import Face6Icon from '@mui/icons-material/Face6';
-import FastForwardIcon from '@mui/icons-material/FastForward';
 import FormatPaintIcon from '@mui/icons-material/FormatPaint';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
-import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
-import ReplayIcon from '@mui/icons-material/Replay';
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined';
 
@@ -42,7 +41,7 @@ export function messageBackground(theme: Theme, messageRole: DMessage['role'], w
     case 'system':
       return wasEdited ? theme.vars.palette.warning.plainHoverBg : defaultBackground;
     case 'user':
-      return theme.vars.palette.primary.plainHoverBg; // .background.level1
+      return 'transparent';
     case 'assistant':
       return unknownAssistantIssue ? theme.vars.palette.danger.softBg : defaultBackground;
   }
@@ -52,11 +51,10 @@ export function messageBackground(theme: Theme, messageRole: DMessage['role'], w
 export function makeAvatar(messageAvatar: string | null, messageRole: DMessage['role'], messageOriginLLM: string | undefined, messagePurposeId: SystemPurposeId | undefined, messageSender: string, messageTyping: boolean, size: 'sm' | undefined = undefined): React.JSX.Element {
   if (typeof messageAvatar === 'string' && messageAvatar)
     return <Avatar alt={messageSender} src={messageAvatar} />;
-  const iconSx = { width: 40, height: 40 };
-  const mascotSx = size === 'sm' ? { width: 40, height: 40 } : { width: 64, height: 64 };
+  const mascotSx = { width: 48, height: 48 };
   switch (messageRole) {
     case 'system':
-      return <SettingsSuggestIcon sx={iconSx} />;  // https://em-content.zobj.net/thumbs/120/apple/325/robot_1f916.png
+      return <SettingsSuggestIcon sx={mascotSx} />;  // https://em-content.zobj.net/thumbs/120/apple/325/robot_1f916.png
 
     case 'assistant':
       // display a gif avatar when the assistant is typing (people seem to love this, so keeping it after april fools')
@@ -68,28 +66,28 @@ export function makeAvatar(messageAvatar: string | null, messageRole: DMessage['
             : messageOriginLLM?.startsWith('react-')
               ? 'https://i.giphy.com/media/l44QzsOLXxcrigdgI/giphy.webp'
               : 'https://i.giphy.com/media/jJxaUysjzO9ri/giphy.webp'}
-          sx={{ ...mascotSx, borderRadius: 'var(--joy-radius-sm)' }}
+          sx={{ ...mascotSx }}
         />;
       }
       // display the purpose symbol
       if (messageOriginLLM === 'prodia')
-        return <PaletteOutlinedIcon sx={iconSx} />;
+        return <PaletteOutlinedIcon sx={mascotSx} />;
       const symbol = SystemPurposes[messagePurposeId as SystemPurposeId]?.symbol;
       if (symbol)
         return <Box
           sx={{
-            fontSize: '24px',
+            fontSize: `calc(0.62 * ${mascotSx.width}px)`,
             textAlign: 'center',
-            width: '100%', minWidth: `${iconSx.width}px`, lineHeight: `${iconSx.height}px`,
+            width: '100%', minWidth: `${mascotSx.width}px`, lineHeight: `${mascotSx.height}px`, borderRadius: 'var(--joy-radius-md)'
           }}
         >
           {symbol}
         </Box>;
       // default assistant avatar
-      return <SmartToyOutlinedIcon sx={iconSx} />; // https://mui.com/static/images/avatar/2.jpg
+      return <SmartToyOutlinedIcon sx={mascotSx} />; // https://mui.com/static/images/avatar/2.jpg
 
     case 'user':
-      return <Face6Icon sx={iconSx} />;            // https://www.svgrepo.com/show/306500/openai.svg
+      return <Face6Icon sx={mascotSx} />;            // https://www.svgrepo.com/show/306500/openai.svg
   }
   return <Avatar alt={messageSender} />;
 }
@@ -146,7 +144,7 @@ function explainErrorInMessage(text: string, isAssistant: boolean, modelId?: str
  * or collapsing long user messages.
  *
  */
-export function ChatMessage(props: { message: DMessage, isBottom: boolean, onMessageDelete: () => void, onMessageEdit: (text: string) => void, onMessageRunFrom: (offset: number) => void, onImagine: (messageText: string) => void }) {
+export function ChatMessage(props: { message: DMessage, buttonToggleSystemPrompt: any, isBottom: boolean, onMessageDelete: () => void, onMessageEdit: (text: string) => void, onMessageRunFrom: (offset: number) => void, onImagine: (messageText: string) => void }) {
   const {
     text: messageText,
     sender: messageSender,
@@ -164,7 +162,6 @@ export function ChatMessage(props: { message: DMessage, isBottom: boolean, onMes
 
   // state
   const [forceExpanded, setForceExpanded] = React.useState(false);
-  const [isHovering, setIsHovering] = React.useState(false);
   const [menuAnchor, setMenuAnchor] = React.useState<HTMLElement | null>(null);
   const [isEditing, setIsEditing] = React.useState(false);
   const [isImagining, setIsImagining] = React.useState(false);
@@ -195,7 +192,6 @@ export function ChatMessage(props: { message: DMessage, isBottom: boolean, onMes
     e.preventDefault();
     closeOperationsMenu();
   };
-
 
   const handleMenuImagine = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -265,151 +261,179 @@ export function ChatMessage(props: { message: DMessage, isBottom: boolean, onMes
   }
 
 
-  return (
-    <ListItem sx={{
-      display: 'flex', flexDirection: !fromAssistant ? 'row-reverse' : 'row', alignItems: 'flex-start',
-      gap: 1, px: { xs: 1, md: 2 }, py: 2,
-      background,
-      borderBottom: `1px solid ${theme.vars.palette.divider}`,
-      // borderBottomColor: `rgba(${theme.vars.palette.neutral.mainChannel} / 0.2)`,
-      position: 'relative',
-      ...(props.isBottom && { mb: 'auto' }),
-      '&:hover > button': { opacity: 1 },
-    }}>
+  return (<>
 
-      {/* Avatar */}
-      {showAvatars && <Stack
-        sx={{ alignItems: 'center', minWidth: { xs: 50, md: 64 }, textAlign: 'center' }}
-        onMouseEnter={() => setIsHovering(true)} onMouseLeave={() => setIsHovering(false)}
-        onClick={event => setMenuAnchor(event.currentTarget)}>
+    <Stack 
+      direction='column'
+      alignSelf={isEditing ? 'stretch' : 'flex-start'}
+      pt={(showAvatars && fromUser) ? 3 : undefined}
+    >
 
-        {isHovering ? (
-          <IconButton variant='soft' color={fromAssistant ? 'neutral' : 'primary'}>
-            <MoreVertIcon />
-          </IconButton>
-        ) : (
-          avatarEl
-        )}
+      {/* Sender details and message actions */}
+      <Stack 
+        direction='row' 
+        gap={1} 
+        alignItems='flex-start' 
+        pl={(!showAvatars && !fromSystem) || fromUser ? 2 : undefined} 
+        pb={(showAvatars && fromAssistant) ? 2 : fromSystem ? 1 : undefined}
+        sx={{ 
+          ...(showAvatars && fromAssistant && {
+            transform: 'translateY(50%)', position: 'relative', zIndex: 2 
+          })
+        }}
+      >
 
-        {fromAssistant && (
-          <Tooltip title={messageOriginLLM || 'unk-model'} variant='solid'>
-            <Typography level='body2' sx={messageTyping
-              ? { animation: `${cssRainbowColorKeyframes} 5s linear infinite`, fontWeight: 500 }
-              : { fontWeight: 500 }
-            }>
-              {prettyBaseModel(messageOriginLLM)}
-            </Typography>
-          </Tooltip>
-        )}
-
-      </Stack>}
-
-
-      {/* Edit / Blocks */}
-      {!isEditing ? (
-
-        <Box sx={{ ...cssBlock, flexGrow: 0 }} onDoubleClick={handleMenuEdit}>
-
-          {fromSystem && wasEdited && (
-            <Typography level='body2' color='warning' sx={{ mt: 1, mx: 1.5 }}>modified by user - auto-update disabled</Typography>
-          )}
-
-          {!errorMessage && parseBlocks(fromSystem, collapsedText).map((block, index) =>
-            block.type === 'html'
-              ? <RenderHtml key={'html-' + index} htmlBlock={block} sx={cssCode} />
-              : block.type === 'code'
-                ? <RenderCode key={'code-' + index} codeBlock={block} sx={cssCode} />
-                : block.type === 'image'
-                  ? <RenderImage key={'image-' + index} imageBlock={block} allowRunAgain={props.isBottom} onRunAgain={handleMenuRunAgain} />
-                  : renderMarkdown
-                    ? <RenderMarkdown key={'text-md-' + index} textBlock={block} />
-                    : <RenderText key={'text-' + index} textBlock={block} />,
-          )}
-
-          {errorMessage && (
-            <Tooltip title={<Typography sx={{ maxWidth: 800 }}>{collapsedText}</Typography>} variant='soft'>
-              <Alert variant='soft' color='warning' sx={{ mt: 1 }}><Typography>{errorMessage}</Typography></Alert>
+        {/* Avatar */}
+        { showAvatars && !fromUser && !fromSystem && 
+          <Stack alignItems='center' textAlign='center'>{avatarEl}</Stack>
+        }
+        {/* Sender/model name and actions */}
+        <Stack direction='row' gap={1} alignItems='center'>
+          { fromSystem && props.buttonToggleSystemPrompt() }
+          { fromAssistant && 
+            <Tooltip title={messageOriginLLM || 'unk-model'} variant='solid'>
+              <Typography 
+                level='h3'
+                sx={{ 
+                  whiteSpace: 'nowrap', 
+                  ...(messageTyping && {animation: `${cssRainbowColorKeyframes} 3s linear infinite`}),
+                }}
+              >
+                {prettyBaseModel(messageOriginLLM)}
+              </Typography>
             </Tooltip>
-          )}
+          }
+          { fromUser &&
+            <Typography 
+              level='h3'
+              sx={{ 
+                whiteSpace: 'nowrap', 
+              }}
+            >
+              You
+            </Typography>
+          }
+          <Stack direction='row' gap={0} alignItems='center'>
+            <IconButton size='sm' variant='plain' color='neutral' onClick={event => setMenuAnchor(event.currentTarget)}>
+              <MoreVertIcon />
+            </IconButton>
+          </Stack>
+        </Stack>
 
-          {isCollapsed && <Button variant='plain' onClick={handleExpand}>... expand ...</Button>}
+      </Stack>
 
-          {/* import VisibilityIcon from '@mui/icons-material/Visibility'; */}
-          {/*<br />*/}
-          {/*<Chip variant='outlined' size='lg' color='warning' sx={{ mt: 1, fontSize: '0.75em' }} startDecorator={<VisibilityIcon />}>*/}
-          {/*  BlockAction*/}
-          {/*</Chip>*/}
+      <Box
+        alignSelf={isEditing ? 'stretch' : 'flex-start'}
+        sx={{
+          background,
+          borderRadius: 'var(--joy-radius-md)',
+          position: 'relative',
+          px: 2,
+          py: !fromUser ? 2 : 0,
+          ...(fromAssistant && {
+            border: `1px solid ${theme.vars.palette.background.level3}`,
+          }),
+          ...(fromUser && {
+          }),
+          ...(fromSystem && {
+            border: `3px solid ${theme.vars.palette.primary[500]}`,
+            fontWeight: 500,
+          }),
+        }}
+      >
 
-        </Box>
+        {/* Edit / Blocks */}
+        {!isEditing ? (
 
-      ) : (
+          <Box sx={{ ...cssBlock }} onDoubleClick={handleMenuEdit}>
 
-        <InlineTextarea initialText={messageText} onEdit={handleTextEdited} sx={{ ...cssBlock, lineHeight: 1.75, flexGrow: 1 }} />
+            {fromSystem && wasEdited && (
+              <Typography level='body2' color='warning' sx={{ pb: 2 }}>edited by user - auto-update disabled</Typography>
+            )}
 
-      )}
+            {!errorMessage && parseBlocks(fromSystem, collapsedText).map((block, index) =>
+              block.type === 'html'
+                ? <RenderHtml key={'html-' + index} htmlBlock={block} sx={cssCode} />
+                : block.type === 'code'
+                  ? <RenderCode key={'code-' + index} codeBlock={block} sx={cssCode} />
+                  : block.type === 'image'
+                    ? <RenderImage key={'image-' + index} imageBlock={block} allowRunAgain={props.isBottom} onRunAgain={handleMenuRunAgain} />
+                    : renderMarkdown
+                      ? <RenderMarkdown key={'text-md-' + index} textBlock={block} />
+                      : <RenderText key={'text-' + index} textBlock={block} />,
+            )}
 
+            {errorMessage && (
+              <Tooltip title={<Typography sx={{ maxWidth: 800 }}>{collapsedText}</Typography>} variant='soft'>
+                <Alert variant='soft' color='warning' sx={{ mt: 1 }}><Typography>{errorMessage}</Typography></Alert>
+              </Tooltip>
+            )}
 
-      {/* Copy message */}
-      {!fromSystem && !isEditing && (
-        <Tooltip title={fromAssistant ? 'Copy message' : 'Copy input'} variant='solid'>
-          <IconButton
-            variant='outlined' color='neutral' onClick={handleMenuCopy}
-            sx={{
-              position: 'absolute', ...(fromAssistant ? { right: { xs: 12, md: 28 } } : { left: { xs: 12, md: 28 } }), zIndex: 10,
-              opacity: 0, transition: 'opacity 0.3s',
-            }}>
-            <ContentCopyIcon />
-          </IconButton>
-        </Tooltip>
-      )}
+            {isCollapsed && <Box pt={1}><Button size='sm' color='neutral' variant='outlined' onClick={handleExpand}>Show full message</Button></Box>}
 
+            {/* import VisibilityIcon from '@mui/icons-material/Visibility'; */}
+            {/*<br />*/}
+            {/*<Chip variant='outlined' size='lg' color='warning' sx={{ mt: 1, fontSize: '0.75em' }} startDecorator={<VisibilityIcon />}>*/}
+            {/*  BlockAction*/}
+            {/*</Chip>*/}
 
-      {/* Message Operations menu */}
-      {!!menuAnchor && (
-        <Menu
-          variant='plain' color='neutral' size='lg' placement='bottom-end' sx={{ minWidth: 280 }}
-          open anchorEl={menuAnchor} onClose={closeOperationsMenu}>
-          <MenuItem onClick={handleMenuCopy}>
-            <ListItemDecorator><ContentCopyIcon /></ListItemDecorator>
-            Copy
+          </Box>
+
+        ) : (
+
+          <InlineTextarea initialText={messageText} onEdit={handleTextEdited} sx={{ ...cssBlock, lineHeight: 1.75, flexGrow: 1 }} />
+
+        )}
+      </Box>
+    
+    </Stack>
+
+    {/* Message Operations menu */}
+    {!!menuAnchor && (
+      <Menu
+        variant='plain' color='neutral' placement='bottom-end' sx={{ minWidth: 240 }}
+        open anchorEl={menuAnchor} onClose={closeOperationsMenu}>
+
+        <MenuItem onClick={handleMenuCopy}>
+          <ListItemDecorator><ContentCopyIcon /></ListItemDecorator>
+          Copy
+        </MenuItem>
+
+        {isSpeakable && (
+          <MenuItem onClick={handleMenuSpeak} disabled={isSpeaking}>
+            <ListItemDecorator>{isSpeaking ? <CircularProgress size='sm' /> : <PlayCircleIcon />}</ListItemDecorator>
+            Speak
           </MenuItem>
-          <MenuItem onClick={handleMenuEdit}>
-            <ListItemDecorator><EditIcon /></ListItemDecorator>
-            {isEditing ? 'Discard' : 'Edit'}
-            {!isEditing && <span style={{ opacity: 0.5, marginLeft: '8px' }}> (double-click)</span>}
-          </MenuItem>
-          {isImaginable && isImaginableEnabled && (
-            <MenuItem onClick={handleMenuImagine} disabled={!isImaginableEnabled || isImagining}>
-              <ListItemDecorator>{isImagining ? <CircularProgress size='sm' /> : <FormatPaintIcon />}</ListItemDecorator>
-              Imagine
-            </MenuItem>
-          )}
-          {isSpeakable && (
-            <MenuItem onClick={handleMenuSpeak} disabled={isSpeaking}>
-              <ListItemDecorator>{isSpeaking ? <CircularProgress size='sm' /> : <RecordVoiceOverIcon />}</ListItemDecorator>
-              Speak
-            </MenuItem>
-          )}
-          <ListDivider />
-          {fromAssistant && (
-            <MenuItem onClick={handleMenuRunAgain}>
-              <ListItemDecorator><ReplayIcon /></ListItemDecorator>
-              Retry
-            </MenuItem>
-          )}
-          {fromUser && (
-            <MenuItem onClick={handleMenuRunAgain}>
-              <ListItemDecorator><FastForwardIcon /></ListItemDecorator>
-              Run Again
-            </MenuItem>
-          )}
-          <MenuItem onClick={props.onMessageDelete} disabled={false /*fromSystem*/}>
-            <ListItemDecorator><ClearIcon /></ListItemDecorator>
-            Delete
-          </MenuItem>
-        </Menu>
-      )}
+        )}
 
-    </ListItem>
-  );
+        {isImaginable && isImaginableEnabled && (
+          <MenuItem onClick={handleMenuImagine} disabled={!isImaginableEnabled || isImagining}>
+            <ListItemDecorator>{isImagining ? <CircularProgress size='sm' /> : <FormatPaintIcon />}</ListItemDecorator>
+            Imagine
+          </MenuItem>
+        )}
+
+        <ListDivider />
+
+        <MenuItem onClick={handleMenuEdit}>
+          <ListItemDecorator><EditIcon /></ListItemDecorator>
+          {isEditing ? 'Done editing' : 'Edit'}
+        </MenuItem>
+
+        {(fromUser || fromAssistant) && (
+          <MenuItem onClick={handleMenuRunAgain}>
+            <ListItemDecorator><RefreshIcon /></ListItemDecorator>
+            Run again {fromUser && 'from here'}
+          </MenuItem>
+        )}
+
+        <ListDivider />
+
+        <MenuItem onClick={props.onMessageDelete} disabled={false /*fromSystem*/}>
+          <ListItemDecorator><DeleteIcon /></ListItemDecorator>
+          Delete
+        </MenuItem>
+      </Menu>
+    )}
+  </>);
 }

@@ -1,5 +1,5 @@
 import createCache from '@emotion/cache';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { JetBrains_Mono } from 'next/font/google';
 import { extendTheme } from '@mui/joy';
 import { keyframes } from '@emotion/react';
 
@@ -12,15 +12,11 @@ export const hideOnDesktop = { display: { xs: 'flex', md: 'none' } };
 export const settingsGap = 2;
 export const settingsCol1Width = 150;
 
+// Floating Buttons
+export const floatingButtonsSx = { backdropFilter: 'blur(6px) grayscale(0.8)' }
+
 
 // Theme & Fonts
-
-const inter = Inter({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-  fallback: ['Helvetica', 'Arial', 'sans-serif'],
-});
 
 const jetBrainsMono = JetBrains_Mono({
   weight: ['400', '500', '600', '700'],
@@ -29,16 +25,29 @@ const jetBrainsMono = JetBrains_Mono({
   fallback: ['monospace'],
 });
 
+const themeHarlan = {
+  palette: {
+    primary: {
+      500: 'rgb(118,108,172)', // Harlan purple
+      solidBg: 'rgb(118,108,172)', // Harlan purple
+      solidHoverBg: 'rgb(84,75,145)', // Harlan purple
+      solidActiveBg: 'rgb(84,75,145, 0.9)', // Harlan purple
+      solidDisabledBg: 'rgb(84,75,145, 0.9)', // Harlan purple
+    }
+  }
+}
+
 export const theme = extendTheme({
   fontFamily: {
-    body: inter.style.fontFamily,
+    body: 'system-ui, sans-serif',
     code: jetBrainsMono.style.fontFamily,
+    display: 'system-ui, sans-serif',
   },
   colorSchemes: {
     light: {
       palette: {
         background: {
-          body: 'var(--joy-palette-neutral-300, #B9B9C6)', // background.level4
+          body: '#EFEFEF',
         },
         primary: {
           // 50: '#F4FAFF', // softBg
@@ -46,43 +55,73 @@ export const theme = extendTheme({
           // 200: '#ADDBFF',
           // 300: '#6FB6FF',
           // 400: '#3990FF',
-          // 500: '#096BDE', // solidBg [Button.solid]  -  #096BDE | #0D46D7 (suggested)
+          500: themeHarlan.palette.primary[500],
           // 600: '#054DA7', // solidHoverBg [IconButton.plain (fg)]
           // 700: '#02367D',
           // 800: '#072859',
           // 900: '#00153C',
+          solidBg: themeHarlan.palette.primary.solidBg,
+          solidHoverBg: themeHarlan.palette.primary.solidHoverBg,
+          solidActiveBg: themeHarlan.palette.primary.solidActiveBg,
+          solidDisabledBg: themeHarlan.palette.primary.solidDisabledBg,
         },
         neutral: {
           solidBg: 'var(--joy-palette-neutral-700, #434356)',
           solidHoverBg: 'var(--joy-palette-neutral-800, #25252D)', // hover Neutral buttons (App Bar)
-          // 50: '#F7F7F8',
-          // 100: '#EBEBEF',
-          // 200: '#D8D8DF',
-          // 300: '#B9B9C6',
-          // 400: '#8F8FA3',
-          // 500: '#73738C',
-          // 600: '#5A5A72', // solidBg [Button.solid]
-          // 700: '#434356', // solidHoverBg
-          // 800: '#25252D',
-          // 900: '#131318',
+          lightChannel: '239 239 239',
+          50: '#F7F7F8',
+          100: '#EFEFEF',
+          200: '#D8D8DF',
+          300: '#B9B9C6',
+          400: '#8F8FA3',
+          500: '#73738C',
+          600: '#5A5A72', // solidBg [Button.solid]
+          700: '#434356', // solidHoverBg
+          800: '#25252D',
+          900: '#131318',
         },
       },
     },
     dark: {
       palette: {
         background: {
+          body: '#25252D',
           surface: 'var(--joy-palette-neutral-900, #131318)',
           level1: 'var(--joy-palette-common-black, #09090D)',
           level2: 'var(--joy-palette-neutral-800, #25252D)',
           // popup: 'var(--joy-palette-common-black, #09090D)',
         },
+        primary: {
+          500: themeHarlan.palette.primary[500],
+          solidBg: themeHarlan.palette.primary.solidBg,
+          solidHoverBg: themeHarlan.palette.primary.solidHoverBg,
+          solidActiveBg: themeHarlan.palette.primary.solidActiveBg,
+          solidDisabledBg: themeHarlan.palette.primary.solidDisabledBg,
+        },
+        neutral: {
+          lightChannel: '37 37 45',
+        }
       },
     },
-
+  },
+  typography: {
+    h1: {
+      fontSize: '1rem',
+      fontWeight: '800',
+      lineHeight: 1,
+    },
+    h2: {
+      fontSize: '1rem',
+      fontWeight: '600',
+    },
+    h3: {
+      fontSize: '0.875rem',
+      fontWeight: '600',
+    }
   },
 });
 
-export const bodyFontClassName = inter.className;
+export const bodyFontClassName = 'systemUI';
 
 export const cssRainbowColorKeyframes = keyframes`
   100%, 0% {
@@ -146,3 +185,5 @@ export function createEmotionCache() {
 
 // For next April Fools' week
 // export const foolsMode = new Date().getMonth() === 3 && new Date().getDate() <= 7;
+
+// console.log(theme);

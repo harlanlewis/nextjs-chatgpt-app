@@ -24,10 +24,10 @@ export default function MyDocument({ emotionStyleTags }: MyDocumentProps) {
         <meta name='theme-color' content={Brand.Meta.ThemeColor} />
 
         {/* Favicons & PWA */}
-        <link rel='shortcut icon' href='/favicon.ico' />
+        <link rel='shortcut icon' href='/favicon.png' />
         <link rel='icon' type='image/png' sizes='32x32' href='/icons/favicon-32x32.png' />
-        <link rel='icon' type='image/png' sizes='16x16' href='/icons/favicon-16x16.png' />
-        <link rel='apple-touch-icon' sizes='180x180' href='/icons/apple-touch-icon.png' />
+        <link rel='icon' type='image/png' sizes='64x64' href='/icons/favicon-64x64.png' />
+        <link rel='apple-touch-icon' sizes='192x192' href='/icons/apple-touch-icon.png' />
         <link rel='manifest' href='/manifest.json' />
         <meta name='apple-mobile-web-app-capable' content='yes' />
         <meta name='apple-mobile-web-app-status-bar-style' content='black' />
@@ -46,7 +46,7 @@ export default function MyDocument({ emotionStyleTags }: MyDocumentProps) {
         <meta property='twitter:title' content={Brand.Meta.Title} />
         <meta property='twitter:description' content={Brand.Meta.Description} />
         {Brand.URIs.CardImage && <meta property='twitter:image' content={Brand.URIs.CardImage} />}
-        <meta name='twitter:site' content={Brand.Meta.TwitterSite} />
+        {/* <meta name='twitter:site' content={Brand.Meta.TwitterSite} /> */}
         <meta name='twitter:card' content='summary_large_image' />
 
         {/* Style Sheets (injected and server-side) */}

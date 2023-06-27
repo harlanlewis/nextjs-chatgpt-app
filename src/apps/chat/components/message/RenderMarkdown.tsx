@@ -27,7 +27,6 @@ export const RenderMarkdown = ({ textBlock }: { textBlock: TextBlock }) => {
     <Box
       className={`markdown-body ${theme.palette.mode === 'dark' ? 'markdown-body-dark' : 'markdown-body-light'}`}
       sx={{
-        mx: '12px !important',                                // margin: 1.5 like other blocks
         '& table': { width: 'inherit !important' },           // un-break auto-width (tables have 'max-content', which overflows)
         '--color-canvas-default': 'transparent !important',   // remove the default background color
         fontFamily: `inherit !important`,                     // use the default font family

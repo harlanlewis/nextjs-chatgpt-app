@@ -1,3 +1,9 @@
+# This is Harlan's personal fork
+
+Upstream readme below:
+
+---
+
 # `BIG-AGI` 🤖💬
 
 Welcome to `big-AGI` 👋 your personal AGI application

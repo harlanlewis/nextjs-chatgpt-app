@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Head from 'next/head';
-import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
+// import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 import { AppProps } from 'next/app';
 import { CacheProvider, EmotionCache } from '@emotion/react';
 import { CssBaseline, CssVarsProvider } from '@mui/joy';
@@ -26,7 +26,7 @@ function MyApp({ Component, emotionCache = clientSideEmotionCache, pageProps }: 
     <CacheProvider value={emotionCache}>
       <Head>
         <title>{Brand.Title.Common}</title>
-        <meta name='viewport' content='minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no' />
+        <meta name='viewport' content='minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, maximum-scale=1, user-scalable=no' />
       </Head>
       {/* Rect-query provider */}
       <QueryClientProvider client={queryClient}>
@@ -37,7 +37,7 @@ function MyApp({ Component, emotionCache = clientSideEmotionCache, pageProps }: 
         </CssVarsProvider>
       </QueryClientProvider>
     </CacheProvider>
-    <VercelAnalytics debug={false} />
+    {/* <VercelAnalytics debug={false} /> */}
   </>;
 }
 

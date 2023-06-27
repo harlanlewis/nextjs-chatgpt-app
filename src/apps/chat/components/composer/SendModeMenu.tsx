@@ -26,7 +26,7 @@ const SendModeItems: { [key in SendModeId]: SendModeData } = {
 
 export const SendModeMenu = (props: { anchorEl: HTMLAnchorElement, sendMode: SendModeId, onSetSendMode: (sendMode: SendModeId) => void, onClose: () => void, }) =>
   <Menu
-    variant='plain' color='neutral' size='md' placement='top-end' sx={{ minWidth: 320, overflow: 'auto' }}
+    variant='plain' color='neutral' size='sm' placement='top-end' sx={{ minWidth: 320, overflow: 'auto' }}
     open anchorEl={props.anchorEl} onClose={props.onClose}>
 
     <MenuItem color='neutral' selected>Conversation Mode</MenuItem>

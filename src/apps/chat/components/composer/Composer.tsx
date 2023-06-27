@@ -1,20 +1,22 @@
 import * as React from 'react';
 import { shallow } from 'zustand/shallow';
 
-import { Box, Button, Card, Grid, IconButton, ListDivider, ListItemDecorator, Menu, MenuItem, Stack, Textarea, Tooltip, Typography, useTheme } from '@mui/joy';
+import { Box, Button, ButtonGroup, Card, IconButton, ListDivider, ListItemDecorator, Menu, MenuItem, Stack, Textarea, Tooltip, Typography, useTheme } from '@mui/joy';
 import { ColorPaletteProp, SxProps, VariantProp } from '@mui/joy/styles/types';
+
 import ContentPasteGoIcon from '@mui/icons-material/ContentPasteGo';
 import DataArrayIcon from '@mui/icons-material/DataArray';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import HistoryIcon from '@mui/icons-material/History';
 import MicIcon from '@mui/icons-material/Mic';
 import PanToolIcon from '@mui/icons-material/PanTool';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import StopOutlinedIcon from '@mui/icons-material/StopOutlined';
 import TelegramIcon from '@mui/icons-material/Telegram';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 
 import { ContentReducer } from '~/modules/aifn/summarize/ContentReducer';
 import { useChatLLM } from '~/modules/llms/store-llms';
@@ -22,13 +24,14 @@ import { useChatLLM } from '~/modules/llms/store-llms';
 import { ConfirmationModal } from '~/common/components/ConfirmationModal';
 import { countModelTokens } from '~/common/llm-util/token-counter';
 import { extractFilePathsWithCommonRadix } from '~/common/util/dropTextUtils';
-import { hideOnDesktop, hideOnMobile } from '~/common/theme';
 import { htmlTableToMarkdown } from '~/common/util/htmlTableToMarkdown';
 import { pdfToText } from '~/common/util/pdfToText';
 import { useChatStore } from '~/common/state/store-chats';
 import { useSpeechRecognition } from '~/common/components/useSpeechRecognition';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
+import { hideOnMobile } from '~/common/theme';
 
+import { ComposerOptionsBar } from './ComposerOptionsBar';
 import { SendModeId } from '../../Chat';
 import { SendModeMenu } from './SendModeMenu';
 import { TokenBadge } from './TokenBadge';
@@ -53,45 +56,58 @@ const expandPromptTemplate = (template: string, dict: object) => (inputValue: st
 
 
 const attachFileLegend =
-  <Stack sx={{ p: 1, gap: 1, fontSize: '16px', fontWeight: 400 }}>
-    <Box sx={{ mb: 1, textAlign: 'center' }}>
-      Attach a file to the message
-    </Box>
+  <Stack sx={{ p: 1, gap: 1, fontSize: '0.8rem' }}>
+    <strong>Attach a file.</strong> 
     <table>
       <tbody>
       <tr>
         <td width={36}><PictureAsPdfIcon sx={{ width: 24, height: 24 }} /></td>
         <td><b>PDF</b></td>
-        <td width={36} align='center' style={{ opacity: 0.5 }}>→</td>
+        <td width={36} align='center' style={{ opacity: 0.75 }}>→</td>
         <td>📝 Text (split manually)</td>
       </tr>
       <tr>
         <td><DataArrayIcon sx={{ width: 24, height: 24 }} /></td>
         <td><b>Code</b></td>
-        <td align='center' style={{ opacity: 0.5 }}>→</td>
+        <td align='center' style={{ opacity: 0.75 }}>→</td>
         <td>📚 Markdown</td>
       </tr>
       <tr>
         <td><FormatAlignCenterIcon sx={{ width: 24, height: 24 }} /></td>
         <td><b>Text</b></td>
-        <td align='center' style={{ opacity: 0.5 }}>→</td>
+        <td align='center' style={{ opacity: 0.75 }}>→</td>
         <td>📝 As-is</td>
       </tr>
       </tbody>
     </table>
-    <Box sx={{ mt: 1, fontSize: '14px' }}>
-      Drag & drop in chat for faster loads ⚡
+    <Box>
+      <strong>⚡ Tip:</strong> try drag & drop!
     </Box>
   </Stack>;
 
 const pasteClipboardLegend =
-  <Box sx={{ p: 1, fontSize: '14px', fontWeight: 400 }}>
-    Converts Code and Tables to 📚 Markdown
+  <Box sx={{ p: 1, fontSize: '0.8rem' }}>
+    <strong>Paste from clipboard.</strong> 
+    <Box sx={{ mt: 1 }}>Converts tables to Markdown.</Box>
+  </Box>;
+
+const messageHistoryLegend =
+  <Box sx={{ p: 1, fontSize: '0.8rem' }}>
+    <strong>Message history.</strong> 
+    <Box sx={{ mt: 1 }}>View and reuse previous messages.</Box>
+  </Box>;
+
+const micLegend = 
+  <Box sx={{ p: 1, fontSize: '0.8rem' }}>
+    <strong>Record audio.</strong> 
+    <Box sx={{ mt: 1 }}>
+      <strong>Shortcut:</strong> CTRL + M
+    </Box>
   </Box>;
 
 
 const MicButton = (props: { variant: VariantProp, color: ColorPaletteProp, onClick: () => void, sx?: SxProps }) =>
-  <Tooltip title='CTRL + M' placement='top'>
+  <Tooltip title={micLegend} placement='top'>
     <IconButton variant={props.variant} color={props.color} onClick={props.onClick} sx={props.sx}>
       <MicIcon />
     </IconButton>
@@ -105,27 +121,28 @@ const SentMessagesMenu = (props: {
   onClear: () => void,
 }) =>
   <Menu
-    variant='plain' color='neutral' size='md' placement='top-end' sx={{ minWidth: 320, maxWidth: '100dvw', maxHeight: 'calc(100dvh - 56px)', overflowY: 'auto' }}
+    variant='plain' color='neutral' size='sm' placement='top-end' sx={{ minWidth: 320, maxWidth: '100dvw', maxHeight: 'calc(80dvh)', overflowY: 'auto' }}
     open={!!props.anchorEl} anchorEl={props.anchorEl} onClose={props.onClose}>
 
-    <MenuItem color='neutral' selected>Reuse messages 💬</MenuItem>
+    <MenuItem color='neutral' selected>Sent messages</MenuItem>
 
     <ListDivider />
 
-    {props.messages.map((item, index) =>
-      <MenuItem
-        key={'composer-sent-' + index}
-        onClick={() => { props.onPaste(item.text); props.onClose(); }}
-        sx={{ textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline', overflow: 'hidden' }}
-      >
-        {item.count > 1 && <span style={{ marginRight: 1 }}>({item.count})</span>} {item.text?.length > 70 ? item.text.slice(0, 68) + '...' : item.text}
-      </MenuItem>)}
+      {props.messages.map((item, index) =>
+        <MenuItem
+          key={'composer-sent-' + index}
+          onClick={() => { props.onPaste(item.text); props.onClose(); }}
+          sx={{ textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline', overflow: 'hidden' }}
+        >
+          {item.count > 1 && <span style={{ marginRight: 1 }}>({item.count})</span>} {item.text?.length > 70 ? item.text.slice(0, 68) + '...' : item.text}
+        </MenuItem>
+      ).reverse()}
 
     <ListDivider />
 
     <MenuItem onClick={props.onClear}>
       <ListItemDecorator><DeleteOutlineIcon /></ListItemDecorator>
-      Clear sent messages history
+      Clear history
     </MenuItem>
 
   </Menu>;
@@ -144,7 +161,6 @@ const SentMessagesMenu = (props: {
  */
 export function Composer(props: {
   conversationId: string | null; messageId: string | null;
-  isDeveloperMode: boolean;
   onSendMessage: (sendModeId: SendModeId, conversationId: string, text: string) => void;
   sx?: SxProps;
 }) {
@@ -200,9 +216,15 @@ export function Composer(props: {
     }
   };
 
-  const handleShowSendMode = (event: React.MouseEvent<HTMLAnchorElement>) => setSendModeMenuAnchor(event.currentTarget);
-
   const handleHideSendMode = () => setSendModeMenuAnchor(null);
+  
+  const handleToggleSendMode = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (sendModeMenuAnchor) {
+      handleHideSendMode();
+    } else {
+      setSendModeMenuAnchor(event.currentTarget);
+    }
+  }
 
   const handleStopClicked = () => props.conversationId && stopTyping(props.conversationId);
 
@@ -341,7 +363,6 @@ export function Composer(props: {
     // paste not intercepted, continue with default behavior
   };
 
-
   const showSentMessages = (event: React.MouseEvent<HTMLAnchorElement>) => setSentMessagesAnchor(event.currentTarget);
 
   const hideSentMessages = () => setSentMessagesAnchor(null);
@@ -409,191 +430,182 @@ export function Composer(props: {
 
   // const prodiaApiKey = isValidProdiaApiKey(useSettingsStore(state => state.prodiaApiKey));
   // const isProdiaConfigured = !requireUserKeyProdia || prodiaApiKey;
-  const textPlaceholder: string = props.isDeveloperMode
-    ? 'Tell me what you need, and drop source files...'
-    : /*isProdiaConfigured ?*/ 'Chat · /react · /imagine · drop text files...' /*: 'Chat · /react · drop text files...'*/;
+  const textPlaceholder: string = 'Chat · /react · /imagine · drop text files...';
 
   const isReAct = sendModeId === 'react';
 
   return (
-    <Box sx={props.sx}>
-      <Grid container spacing={{ xs: 1, md: 2 }}>
+    <>
 
-        {/* Left pane (buttons and Textarea) */}
-        <Grid xs={12} md={9}><Stack direction='row' spacing={{ xs: 1, md: 2 }}>
+      <Stack direction='column' spacing={1} p={1}
+        sx={{ 
+          background: theme.vars.palette.background.surface,
+          borderTop: `1px solid ${theme.vars.palette.divider}`,
+          ...(props.sx || {}),
+        }}
+      >
 
-          {/* Vertical Buttons Bar */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 0, md: 2 } }}>
+        <ComposerOptionsBar />
 
-            {/*<Typography level='body3' sx={{mb: 2}}>Context</Typography>*/}
+        {/* INPUT */}
+        <Box sx={{ flexGrow: 1, position: 'relative' }}>
 
-            {isSpeechEnabled && <Box sx={hideOnDesktop}>
+          <Box sx={{ position: 'relative' }}>
+            <Textarea
+              variant='outlined' color={isReAct ? 'info' : 'neutral'}
+              autoFocus
+              minRows={4} maxRows={12}
+              placeholder={textPlaceholder}
+              value={composeText}
+              onChange={(e) => setComposeText(e.target.value)}
+              onDragEnter={handleTextareaDragEnter}
+              onKeyDown={handleTextareaKeyDown}
+              onPasteCapture={handleTextareaCtrlV}
+              slotProps={{
+                textarea: {
+                  enterKeyHint: enterToSend ? 'send' : 'enter',
+                  sx: {
+                    ...(isSpeechEnabled ? { pr: { md: 5 } } : {}),
+                    mb: 0.5,
+                  },
+                },
+              }}
+              sx={{
+                background: theme.vars.palette.background.level1,
+                fontSize: '0.875rem',
+                lineHeight: 1.5,
+              }} 
+            />
+            {tokenLimit > 0 && (directTokens > 0 || (historyTokens + responseTokens) > 0) && <TokenProgressbar history={historyTokens} response={responseTokens} direct={directTokens} limit={tokenLimit} />}
+          </Box>
+
+          {!!tokenLimit && <TokenBadge directTokens={directTokens} indirectTokens={historyTokens + responseTokens} tokenLimit={tokenLimit} absoluteBottomRight />}
+
+          <Card
+            color='primary' invertedColors variant='soft'
+            sx={{
+              display: isDragging ? 'flex' : 'none',
+              position: 'absolute', bottom: 0, left: 0, right: 0, top: 0,
+              alignItems: 'center', justifyContent: 'space-evenly',
+              border: '2px dashed',
+              zIndex: 10,
+            }}
+            onDragLeave={handleOverlayDragLeave}
+            onDragOver={handleOverlayDragOver}
+            onDrop={handleOverlayDrop}>
+            <PanToolIcon sx={{ width: 40, height: 40, pointerEvents: 'none' }} />
+            <Typography level='body2' sx={{ pointerEvents: 'none' }}>
+              I will hold on to this for you
+            </Typography>
+          </Card>
+        </Box>
+
+        {/* ACTIONS */}
+
+        <Stack direction='row' justifyContent='space-between' spacing={1}>
+
+          <Stack direction='row' spacing={1}>
+
+            {isSpeechEnabled &&
               <MicButton variant={micVariant} color={micColor} onClick={handleMicClicked} />
-            </Box>}
+            }
 
-            <IconButton variant='plain' color='neutral' onClick={handleShowFilePicker} sx={{ ...hideOnDesktop }}>
-              <UploadFileIcon />
-            </IconButton>
             <Tooltip
               variant='solid' placement='top-start'
               title={attachFileLegend}>
-              <Button fullWidth variant='plain' color='neutral' onClick={handleShowFilePicker} startDecorator={<UploadFileIcon />}
-                      sx={{ ...hideOnMobile, justifyContent: 'flex-start' }}>
-                Attach
-              </Button>
+              <IconButton variant='plain' color='neutral' onClick={handleShowFilePicker}>
+              <AttachFileIcon />
+            </IconButton>
             </Tooltip>
 
-            <IconButton variant='plain' color='neutral' onClick={handlePasteButtonClicked} sx={{ ...hideOnDesktop }}>
-              <ContentPasteGoIcon />
-            </IconButton>
             <Tooltip
               variant='solid' placement='top-start'
               title={pasteClipboardLegend}>
-              <Button fullWidth variant='plain' color='neutral' startDecorator={<ContentPasteGoIcon />} onClick={handlePasteButtonClicked}
-                      sx={{ ...hideOnMobile, justifyContent: 'flex-start' }}>
-                {props.isDeveloperMode ? 'Paste code' : 'Paste'}
-              </Button>
+              <IconButton variant='plain' color='neutral' onClick={handlePasteButtonClicked}>
+              <ContentPasteGoIcon />
+            </IconButton>
             </Tooltip>
-
             <input type='file' multiple hidden ref={attachmentFileInputRef} onChange={handleLoadAttachment} />
-
-          </Box>
-
-          {/* Edit box, with Drop overlay */}
-          <Box sx={{ flexGrow: 1, position: 'relative' }}>
-
-            <Box sx={{ position: 'relative' }}>
-
-              <Textarea
-                variant='outlined' color={isReAct ? 'info' : 'neutral'}
-                autoFocus
-                minRows={4} maxRows={12}
-                placeholder={textPlaceholder}
-                value={composeText}
-                onChange={(e) => setComposeText(e.target.value)}
-                onDragEnter={handleTextareaDragEnter}
-                onKeyDown={handleTextareaKeyDown}
-                onPasteCapture={handleTextareaCtrlV}
-                slotProps={{
-                  textarea: {
-                    enterKeyHint: enterToSend ? 'send' : 'enter',
-                    sx: {
-                      ...(isSpeechEnabled ? { pr: { md: 5 } } : {}),
-                      mb: 0.5,
-                    },
-                  },
-                }}
-                sx={{
-                  background: theme.vars.palette.background.level1,
-                  fontSize: '16px',
-                  lineHeight: 1.75,
-                }} />
-
-              {tokenLimit > 0 && (directTokens > 0 || (historyTokens + responseTokens) > 0) && <TokenProgressbar history={historyTokens} response={responseTokens} direct={directTokens} limit={tokenLimit} />}
-
-            </Box>
-
-            {isSpeechEnabled && <MicButton variant={micVariant} color={micColor} onClick={handleMicClicked} sx={{ ...hideOnMobile, position: 'absolute', top: 0, right: 0, margin: 1 }} />}
-
-            {!!tokenLimit && <TokenBadge directTokens={directTokens} indirectTokens={historyTokens + responseTokens} tokenLimit={tokenLimit} absoluteBottomRight />}
-
-            <Card
-              color='primary' invertedColors variant='soft'
-              sx={{
-                display: isDragging ? 'flex' : 'none',
-                position: 'absolute', bottom: 0, left: 0, right: 0, top: 0,
-                alignItems: 'center', justifyContent: 'space-evenly',
-                border: '2px dashed',
-                zIndex: 10,
-              }}
-              onDragLeave={handleOverlayDragLeave}
-              onDragOver={handleOverlayDragOver}
-              onDrop={handleOverlayDrop}>
-              <PanToolIcon sx={{ width: 40, height: 40, pointerEvents: 'none' }} />
-              <Typography level='body2' sx={{ pointerEvents: 'none' }}>
-                I will hold on to this for you
-              </Typography>
-            </Card>
-
-          </Box>
-
-        </Stack></Grid>
-
-        {/* Send pane */}
-        <Grid xs={12} md={3}>
-          <Stack spacing={2}>
-
-            <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-
-              {/* [mobile-only] Sent messages arrow */}
-              {sentMessages.length > 0 && (
-                <IconButton disabled={!!sentMessagesAnchor} variant='plain' color='neutral' onClick={showSentMessages} sx={{ ...hideOnDesktop, mr: { xs: 1, md: 2 } }}>
-                  <KeyboardArrowUpIcon />
-                </IconButton>
-              )}
-
-              {/* Send / Stop */}
-              {assistantTyping
-                ? (
-                  <Button
-                    fullWidth variant='soft' color={isReAct ? 'info' : 'primary'} disabled={!props.conversationId}
-                    onClick={handleStopClicked}
-                    endDecorator={<StopOutlinedIcon />}
-                  >
-                    Stop
-                  </Button>
-                ) : (
-                  <Button
-                    fullWidth variant='solid' color={isReAct ? 'info' : 'primary'} disabled={!props.conversationId || !chatLLM}
-                    onClick={handleSendClicked} onDoubleClick={handleShowSendMode}
-                    endDecorator={isReAct ? <PsychologyIcon /> : <TelegramIcon />}
-                  >
-                    {isReAct ? 'ReAct' : 'Chat'}
-                  </Button>
-                )}
-            </Box>
-
-            {/* [desktop-only] row with Sent Messages button */}
-            <Stack direction='row' spacing={1} sx={{ ...hideOnMobile, flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'flex-end' }}>
-              {sentMessages.length > 0 && (
-                <Button disabled={!!sentMessagesAnchor} fullWidth variant='plain' color='neutral' startDecorator={<KeyboardArrowUpIcon />} onClick={showSentMessages}>
-                  History
-                </Button>
-              )}
-            </Stack>
-
           </Stack>
-        </Grid>
 
+          <Stack direction='row' spacing={1}>
+            {sentMessages.length > 0 && (
+              <Tooltip
+                variant='solid' placement='top-start'
+                title={messageHistoryLegend}>
+                <IconButton disabled={!!sentMessagesAnchor} variant='plain' color='neutral' onClick={showSentMessages}>
+                <HistoryIcon />
+              </IconButton>
+              </Tooltip>
+            )}
 
-        {/* Mode selector */}
-        {!!sendModeMenuAnchor && (
-          <SendModeMenu anchorEl={sendModeMenuAnchor} sendMode={sendModeId} onSetSendMode={setSendModeId} onClose={handleHideSendMode} />
-        )}
+            {/* Send / Stop */}
+            {assistantTyping ? (
+              <Button
+                fullWidth variant='solid' color='warning' disabled={!props.conversationId}
+                onClick={handleStopClicked}
+                endDecorator={<StopOutlinedIcon />}
+              >
+                Stop
+              </Button>
+            ) : (<>
+              <ButtonGroup>
+                <Button
+                  fullWidth variant='solid' color={isReAct ? 'info' : 'primary'} disabled={!props.conversationId || !chatLLM}
+                  onClick={handleSendClicked}
+                  endDecorator={isReAct ? <PsychologyIcon /> : <TelegramIcon />}
+                >
+                  {isReAct ? 'ReAct' : 'Chat'}
+                </Button>
+                <IconButton
+                  variant='solid' color={isReAct ? 'info' : 'primary'} disabled={!props.conversationId || !chatLLM}
+                  onClick={handleToggleSendMode}
+                >
+                  <ExpandMoreIcon />
+                </IconButton>
+              </ButtonGroup>
+            </>)}
+          
+          </Stack>
 
-        {/* Sent messages menu */}
-        {!!sentMessagesAnchor && (
-          <SentMessagesMenu
-            anchorEl={sentMessagesAnchor} messages={sentMessages} onClose={hideSentMessages}
-            onPaste={handlePasteSent} onClear={handleClearSent}
-          />
-        )}
+        </Stack>
+        
+        <Box justifyContent='end' sx={{ ...hideOnMobile }}>
+          <Typography textAlign='end' fontSize='xs' textColor='neutral.400'>
+            <strong>Shift + Return</strong> to { enterToSend ? 'add a new line' : 'send' }
+          </Typography>
+        </Box>
 
-        {/* Content reducer modal */}
-        {reducerText?.length >= 1 &&
-          <ContentReducer
-            initialText={reducerText} initialTokens={reducerTextTokens} tokenLimit={remainingTokens}
-            onReducedText={handleContentReducerText} onClose={handleContentReducerClose}
-          />
-        }
+      </Stack>
 
-        {/* Clear confirmation modal */}
-        <ConfirmationModal
-          open={confirmClearSent} onClose={handleCancelClearSent} onPositive={handleConfirmedClearSent}
-          confirmationText={'Are you sure you want to clear all your sent messages?'} positiveActionText={'Clear all'}
+      {/* Mode selector */}
+      {!!sendModeMenuAnchor && (
+        <SendModeMenu anchorEl={sendModeMenuAnchor} sendMode={sendModeId} onSetSendMode={setSendModeId} onClose={handleHideSendMode} />
+      )}
+
+      {/* Sent messages menu */}
+      {!!sentMessagesAnchor && (
+        <SentMessagesMenu
+          anchorEl={sentMessagesAnchor} messages={sentMessages} onClose={hideSentMessages}
+          onPaste={handlePasteSent} onClear={handleClearSent}
         />
+      )}
 
-      </Grid>
-    </Box>
+      {/* Content reducer modal */}
+      {reducerText?.length >= 1 &&
+        <ContentReducer
+          initialText={reducerText} initialTokens={reducerTextTokens} tokenLimit={remainingTokens}
+          onReducedText={handleContentReducerText} onClose={handleContentReducerClose}
+        />
+      }
+
+      {/* Clear confirmation modal */}
+      <ConfirmationModal
+        open={confirmClearSent} onClose={handleCancelClearSent} onPositive={handleConfirmedClearSent}
+        confirmationText={'Are you sure you want to clear all your sent messages?'} positiveActionText={'Clear all'}
+      />
+
+
+    </>
   );
 }

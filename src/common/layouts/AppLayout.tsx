@@ -10,7 +10,6 @@ import { isPwa } from '~/common/util/pwaUtils';
 import { useAppStateStore } from '~/common/state/store-appstate';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
 
-import { ApplicationBar } from './appbar/ApplicationBar';
 import { NoSSR } from '../components/NoSSR';
 
 
@@ -45,14 +44,7 @@ export function AppLayout(props: {
         }}>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
-
-          {!props.noAppBar && <ApplicationBar sx={{
-            zIndex: 20, // position: 'sticky', top: 0,
-            // ...(process.env.NODE_ENV === 'development' ? { background: theme.vars.palette.danger.solidBg } : {}),
-          }} />}
-
           {props.children}
-
         </Box>
 
       </Container>

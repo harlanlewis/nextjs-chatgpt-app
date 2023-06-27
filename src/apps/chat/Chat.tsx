@@ -17,15 +17,17 @@ import { Link } from '~/common/components/Link';
 import { conversationToMarkdown } from '~/common/util/conversationToMarkdown';
 import { createDMessage, DMessage, restoreConversationFromJson, useChatStore } from '~/common/state/store-chats';
 import { extractCommands } from '~/common/util/extractCommands';
+import { ApplicationBar } from '~/common/layouts/appbar/ApplicationBar';
 import { useApplicationBarStore } from '~/common/layouts/appbar/store-applicationbar';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
 
-import { ActionItems } from './components/appbar/ActionItems';
+import { ChatContextItems } from '~/common/layouts/appbar/ChatContextItems';
+import { ChatShareItems } from '~/common/layouts/appbar/ChatShareItems';
 import { ChatMessageList } from './components/ChatMessageList';
 import { Composer } from './components/composer/Composer';
 import { ConversationItems } from './components/appbar/ConversationItems';
 import { Dropdowns } from './components/appbar/Dropdowns';
-import { Ephemerals } from './components/ephemerals/Ephemerals';
+import { Ephemerals } from './components/Ephemerals';
 import { ImportedModal, ImportedOutcome } from './components/appbar/ImportedModal';
 import { runAssistantUpdatingState } from './editors/chat-stream';
 import { runImageGenerationUpdatingState } from './editors/image-generate';
@@ -62,10 +64,11 @@ export function Chat() {
 
   // external state
   const theme = useTheme();
-  const { activeConversationId, isConversationEmpty, conversationsCount, importConversation, deleteAllConversations, setMessages, systemPurposeId, setAutoTitle } = useChatStore(state => {
+  const { activeConversationId, topNewConversationId, isConversationEmpty, conversationsCount, importConversation, deleteAllConversations, setMessages, systemPurposeId, setAutoTitle } = useChatStore(state => {
     const conversation = state.conversations.find(conversation => conversation.id === state.activeConversationId);
     return {
       activeConversationId: state.activeConversationId,
+      topNewConversationId: state.conversations.length ? state.conversations[0].messages.length === 0 ? state.conversations[0].id : null : null,
       isConversationEmpty: conversation ? !conversation.messages.length : true,
       conversationsCount: state.conversations.length,
       importConversation: state.importConversation,
@@ -136,7 +139,6 @@ export function Chat() {
     }
   };
 
-
   const handleClearConversation = (conversationId: string) => setClearConfirmationId(conversationId);
 
   const handleConfirmedClearConversation = () => {
@@ -170,7 +172,7 @@ export function Chat() {
         try {
           const paste = await apiAsync.publish.publish.mutate({
             to: 'paste.gg',
-            title: '🤖💬 Chat Conversation',
+            title: 'GPT Conversation',
             fileContent: markdownContent,
             fileName: 'my-chat.md',
             origin: linkToOrigin(),
@@ -236,22 +238,57 @@ export function Chat() {
     [activeConversationId],
   );
 
-  const actionItems = React.useMemo(() =>
-      <ActionItems
+  const contextItems = React.useMemo(() =>
+      <ChatContextItems
         conversationId={activeConversationId} isConversationEmpty={isConversationEmpty}
         isMessageSelectionMode={isMessageSelectionMode} setIsMessageSelectionMode={setIsMessageSelectionMode}
         onClearConversation={handleClearConversation}
-        onPublishConversation={handlePublishConversation}
       />,
     [activeConversationId, isConversationEmpty, isMessageSelectionMode],
   );
+  
+  const shareItems = React.useMemo(() =>
+      <ChatShareItems
+        conversationId={activeConversationId} isConversationEmpty={isConversationEmpty}
+        onPublishConversation={handlePublishConversation}
+      />,
+    [activeConversationId, isConversationEmpty],
+  );
 
   React.useEffect(() => {
-    useApplicationBarStore.getState().register(dropdowns, conversationsBadge, conversationItems, actionItems);
-    return () => useApplicationBarStore.getState().unregister();
-  }, [dropdowns, conversationsBadge, conversationItems, actionItems]);
+    useApplicationBarStore.getState().registerClientComponents(dropdowns, conversationsBadge, conversationItems, contextItems, shareItems);
+    return () => useApplicationBarStore.getState().unregisterClientComponents();
+  }, [dropdowns, conversationsBadge, conversationItems, contextItems, shareItems]);
+
+  const onLandingView = topNewConversationId === activeConversationId;
 
   return <>
+
+    <ApplicationBar
+      onLandingView={ onLandingView }
+      sx={{ 
+        position: 'fixed',
+        zIndex: 100,
+        top: 0,
+        left: onLandingView ? undefined : 0,
+        right: 0,
+        py: 1,
+        px: 2,
+        ...( !onLandingView && {
+          '&:before': {
+            content: '" "',
+            display: 'block',
+            backgroundImage: `linear-gradient(to bottom, rgba(${theme.vars.palette.neutral.lightChannel} / 0.85) 50%, rgba(${theme.vars.palette.neutral.lightChannel} / 0.0001))`,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: '-1rem',
+            zIndex: '-1',
+          },
+        })
+      }} 
+    />
 
     <ChatMessageList
       conversationId={activeConversationId}
@@ -259,11 +296,14 @@ export function Chat() {
       onExecuteConversation={handleExecuteConversation}
       onImagineFromText={handleImagineFromText}
       sx={{
-        flexGrow: 1,
-        background: theme.vars.palette.background.level2,
-        overflowY: 'auto', // overflowY: 'hidden'
+        // There are multiple views within ChatMessageList (for example, PurposeSelector and the message thread) 
+        // that inherit these `sx` values
+        maxWidth: '100dvw',
         minHeight: 96,
-      }} />
+        overflowY: 'auto',
+        flexGrow: 1,
+      }}
+    />
 
     <Ephemerals
       conversationId={activeConversationId}
@@ -274,17 +314,13 @@ export function Chat() {
         minHeight: 64,
       }} />
 
+
     <Composer
       conversationId={activeConversationId} messageId={null}
-      isDeveloperMode={systemPurposeId === 'Developer'}
       onSendMessage={handleSendUserMessage}
       sx={{
-        zIndex: 21, // position: 'sticky', bottom: 0,
-        background: theme.vars.palette.background.surface,
-        borderTop: `1px solid ${theme.vars.palette.divider}`,
-        p: { xs: 1, md: 2 },
+        pb: { xs: 4, md: 1 }, // space for iOS home indicator (TODO: conditional on browser env, not breakpoint)
       }} />
-
 
     {/* Import Chat */}
     <input type='file' multiple hidden accept='.json' ref={conversationFileInputRef} onChange={handleImportConversationFromFiles} />
@@ -295,14 +331,14 @@ export function Chat() {
     {/* Clear */}
     <ConfirmationModal
       open={!!clearConfirmationId} onClose={() => setClearConfirmationId(null)} onPositive={handleConfirmedClearConversation}
-      confirmationText={'Are you sure you want to discard all the messages?'} positiveActionText={'Clear conversation'}
+      confirmationText={'Are you sure you want to discard all the messages?'} positiveActionText={'Delete conversation'}
     />
 
     {/* Deletion */}
     <ConfirmationModal
       open={!!deleteConfirmationId} onClose={() => setDeleteConfirmationId(null)} onPositive={handleConfirmedDeleteConversation}
       confirmationText={deleteConfirmationId === SPECIAL_ID_ALL_CHATS
-        ? 'Are you absolutely sure you want to delete ALL conversations? This action cannot be undone.'
+        ? 'Are you sure you want to delete all conversations? This cannot be undone.'
         : 'Are you sure you want to delete this conversation?'}
       positiveActionText={deleteConfirmationId === SPECIAL_ID_ALL_CHATS
         ? 'Yes, delete all'

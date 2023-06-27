@@ -1,8 +1,7 @@
 import * as React from 'react';
 
-import { Box, Button, Checkbox, IconButton, ListItem, Sheet, Typography, useTheme } from '@mui/joy';
-import ClearIcon from '@mui/icons-material/Clear';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Box, Button, Checkbox, Sheet, Stack, Typography, useTheme } from '@mui/joy';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import { DMessage } from '~/common/state/store-chats';
 
@@ -13,22 +12,29 @@ import { makeAvatar, messageBackground } from './ChatMessage';
 /**
  * Header bar for controlling the operations during the Selection mode
  */
-export const MessagesSelectionHeader = (props: { hasSelected: boolean, isBottom: boolean, sumTokens: number, onClose: () => void, onSelectAll: (selected: boolean) => void, onDeleteMessages: () => void }) =>
+export const MessagesSelectionHeader = (props: { hasSelected: boolean, sumTokens: number, onClose: () => void, onSelectAll: (selected: boolean) => void, onDeleteMessages: () => void }) =>
   <Sheet color='warning' variant='solid' invertedColors sx={{
     display: 'flex', flexDirection: 'row', alignItems: 'center',
-    gap: { xs: 1, sm: 2 }, px: { xs: 1, md: 2 }, py: 1,
+    gap: { xs: 1, sm: 2 }, 
+    px: { xs: 2, md: 4, xl: 6 },
+    py: 1,
   }}>
-    <Checkbox size='md' onChange={event => props.onSelectAll(event.target.checked)} sx={{ minWidth: 24, justifyContent: 'center' }} />
+    <Checkbox 
+      size='md' 
+      label={`Select all (${props.sumTokens} tokens)`}
+      onChange={event => props.onSelectAll(event.target.checked)} 
+      sx={{ minWidth: 24, justifyContent: 'center' }} 
+    />
 
-    <Box>Select all ({props.sumTokens})</Box>
+    <Stack direction='row' justifyContent='flex-end' gap={1} flexGrow={1}>
+      <Button size='sm' variant='solid' color={props.hasSelected ? 'danger' : 'warning'} disabled={!props.hasSelected} onClick={props.onDeleteMessages} startDecorator={<DeleteIcon />}>
+        Prune
+      </Button>
 
-    <Button variant='solid' disabled={!props.hasSelected} onClick={props.onDeleteMessages} sx={{ ml: 'auto', mr: 'auto', minWidth: 150 }} endDecorator={<DeleteOutlineIcon />}>
-      Delete
-    </Button>
-
-    <IconButton variant='plain' onClick={props.onClose}>
-      <ClearIcon />
-    </IconButton>
+      <Button size='sm' variant='solid' onClick={props.onClose}>
+        Done pruning
+      </Button>
+    </Stack>
   </Sheet>;
 
 
@@ -68,15 +74,17 @@ export function ChatMessageSelectable(props: { message: DMessage, isBottom: bool
   const handleCheckedChange = (event: React.ChangeEvent<HTMLInputElement>) => props.onToggleSelected(messageId, event.target.checked);
 
   return (
-    <ListItem sx={{
-      display: 'flex', flexDirection: !fromAssistant ? 'row' : 'row', alignItems: 'center',
-      gap: { xs: 1, sm: 2 }, px: { xs: 1, md: 2 }, py: 2,
-      background,
-      borderBottom: `1px solid ${theme.vars.palette.divider}`,
-      // position: 'relative',
-      ...(props.isBottom && { mb: 'auto' }),
-      '&:hover > button': { opacity: 1 },
-    }}>
+    <Stack 
+      direction='row'
+      alignItems='center'
+      gap={{ xs: 1, sm: 2 }}
+      px={{ xs: 1, md: 2 }}
+      py={2}
+      sx={{
+        background,
+        ...(props.isBottom && { mb: 'auto' }),
+      }}
+    >
 
       <Box sx={{ display: 'flex', minWidth: 24, justifyContent: 'center' }}>
         <Checkbox size='md' checked={props.selected} onChange={handleCheckedChange} />
@@ -98,6 +106,6 @@ export function ChatMessageSelectable(props: { message: DMessage, isBottom: bool
         {messageText}
       </Typography>
 
-    </ListItem>
+    </Stack>
   );
 }

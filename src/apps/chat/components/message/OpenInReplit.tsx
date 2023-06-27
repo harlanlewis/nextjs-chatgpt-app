@@ -26,7 +26,7 @@ export function OpenInReplit({ codeBlock }: CodeBlockProps): React.JSX.Element {
 
   return (
     <Tooltip title={`Open in Replit (${codeBlock.language})`} variant='solid'>
-      <Button variant='outlined' color='neutral' onClick={handleOpenInReplit}>
+      <Button variant='outlined' color='neutral' size='sm' onClick={handleOpenInReplit}>
         Replit
       </Button>
     </Tooltip>

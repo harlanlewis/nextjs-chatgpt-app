@@ -57,9 +57,6 @@ interface UIPreferencesStore {
   renderMarkdown: boolean;
   setRenderMarkdown: (renderMarkdown: boolean) => void;
 
-  showPurposeFinder: boolean;
-  setShowPurposeFinder: (showPurposeFinder: boolean) => void;
-
   showSystemMessages: boolean;
   setShowSystemMessages: (showSystemMessages: boolean) => void;
 
@@ -75,7 +72,7 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
       preferredLanguage: (typeof navigator !== 'undefined') && navigator.language || 'en-US',
       setPreferredLanguage: (preferredLanguage: string) => set({ preferredLanguage }),
 
-      centerMode: 'wide',
+      centerMode: 'full',
       setCenterMode: (centerMode: 'narrow' | 'wide' | 'full') => set({ centerMode }),
 
       enterToSend: true,
@@ -83,9 +80,6 @@ export const useUIPreferencesStore = create<UIPreferencesStore>()(
 
       renderMarkdown: false,
       setRenderMarkdown: (renderMarkdown: boolean) => set({ renderMarkdown }),
-
-      showPurposeFinder: false,
-      setShowPurposeFinder: (showPurposeFinder: boolean) => set({ showPurposeFinder }),
 
       showSystemMessages: false,
       setShowSystemMessages: (showSystemMessages: boolean) => set({ showSystemMessages }),

@@ -1,20 +1,17 @@
 import * as React from 'react';
 import { shallow } from 'zustand/shallow';
 
-import { ListDivider, ListItemDecorator, MenuItem, Typography } from '@mui/joy';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Alert } from '@mui/joy';
 
 import { MAX_CONVERSATIONS, useChatStore } from '~/common/state/store-chats';
-import { useApplicationBarStore } from '~/common/layouts/appbar/store-applicationbar';
 import { useUIPreferencesStore } from '~/common/state/store-ui';
 
-import { ConversationItem } from './ConversationItem';
+import { ConversationItem } from './ConversationItemNew';
 
 
 export function ConversationItems(props: {
-  conversationId: string | null
-  onDeleteAllConversations: () => void,
-  onImportConversation: () => void,
+  conversationId: string | null,
+  editConversations: boolean,
 }) {
 
   // external state
@@ -22,23 +19,20 @@ export function ConversationItems(props: {
     conversation => conversation.id,
   ), shallow);
   const { setActiveConversationId, deleteConversation } = useChatStore(state => ({
+    topNewConversationId: state.conversations.length ? state.conversations[0].messages.length === 0 ? state.conversations[0].id : null : null,
     setActiveConversationId: state.setActiveConversationId,
+    createConversation: state.createConversation,
     deleteConversation: state.deleteConversation,
   }), shallow);
   const { showSymbols } = useUIPreferencesStore(state => ({
     showSymbols: state.zenMode !== 'cleaner',
   }), shallow);
 
-
-  const hasChats = conversationIDs.length > 0;
   const singleChat = conversationIDs.length === 1;
   const maxReached = conversationIDs.length >= MAX_CONVERSATIONS;
 
-  const closeAppMenu = () => useApplicationBarStore.getState().setAppMenuAnchor(null);
-
   const handleConversationActivate = React.useCallback((conversationId: string) => {
     setActiveConversationId(conversationId);
-    closeAppMenu();
   }, [setActiveConversationId]);
 
   const handleConversationDelete = React.useCallback((conversationId: string) => {
@@ -48,25 +42,22 @@ export function ConversationItems(props: {
 
   return <>
 
+    { maxReached &&
+      <Alert variant="soft" color="warning">
+        Reached conversation limit. Starting a new conversation will delete the oldest.
+      </Alert>
+    }
+
     {conversationIDs.map(conversationId =>
       <ConversationItem
         key={'c-id-' + conversationId}
         conversationId={conversationId}
-        isActive={conversationId === props.conversationId}
+        editConversations={props.editConversations}
         isSingle={singleChat}
         showSymbols={showSymbols}
         conversationActivate={handleConversationActivate}
         conversationDelete={handleConversationDelete}
       />)}
-    
-    <ListDivider />
-
-    <MenuItem disabled={!hasChats} onClick={props.onDeleteAllConversations}>
-      <ListItemDecorator><DeleteOutlineIcon /></ListItemDecorator>
-      <Typography>
-        Delete all
-      </Typography>
-    </MenuItem>
 
   </>;
 }

@@ -42,7 +42,7 @@ export function OpenInCodepen({ codeBlock }: CodeBlockProps): React.JSX.Element 
 
   return (
     <Tooltip title='Open in Codepen' variant='solid'>
-      <Button variant='outlined' color='neutral' onClick={handleOpenInCodepen}>
+      <Button variant='outlined' color='neutral' size='sm' onClick={handleOpenInCodepen}>
         Codepen
       </Button>
     </Tooltip>

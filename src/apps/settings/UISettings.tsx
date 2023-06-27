@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { shallow } from 'zustand/shallow';
 
-import { Box, FormControl, FormHelperText, FormLabel, Option, Radio, RadioGroup, Select, Stack, Switch, Tooltip } from '@mui/joy';
+import { Box, FormControl, FormHelperText, FormLabel, Option, Radio, RadioGroup, Select, Stack, Switch, Tooltip, useColorScheme } from '@mui/joy';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import TelegramIcon from '@mui/icons-material/Telegram';
 import WidthNormalIcon from '@mui/icons-material/WidthNormal';
 import WidthWideIcon from '@mui/icons-material/WidthWide';
 
@@ -13,9 +12,6 @@ import { useUIPreferencesStore } from '~/common/state/store-ui';
 
 // languages is defined as a JSON file
 import languages from './languages.json' assert { type: 'json' };
-
-// configuration
-const SHOW_PURPOSE_FINDER = false;
 
 
 function LanguageSelect() {
@@ -64,13 +60,11 @@ export function UISettings() {
     centerMode, setCenterMode,
     enterToSend, setEnterToSend,
     renderMarkdown, setRenderMarkdown,
-    showPurposeFinder, setShowPurposeFinder,
     zenMode, setZenMode,
   } = useUIPreferencesStore(state => ({
     centerMode: state.centerMode, setCenterMode: state.setCenterMode,
     enterToSend: state.enterToSend, setEnterToSend: state.setEnterToSend,
     renderMarkdown: state.renderMarkdown, setRenderMarkdown: state.setRenderMarkdown,
-    showPurposeFinder: state.showPurposeFinder, setShowPurposeFinder: state.setShowPurposeFinder,
     zenMode: state.zenMode, setZenMode: state.setZenMode,
   }), shallow);
 
@@ -81,8 +75,6 @@ export function UISettings() {
   const handleZenModeChange = (event: React.ChangeEvent<HTMLInputElement>) => setZenMode(event.target.value as 'clean' | 'cleaner');
 
   const handleRenderMarkdownChange = (event: React.ChangeEvent<HTMLInputElement>) => setRenderMarkdown(event.target.checked);
-
-  const handleShowSearchBarChange = (event: React.ChangeEvent<HTMLInputElement>) => setShowPurposeFinder(event.target.checked);
 
   return (
 
@@ -102,8 +94,8 @@ export function UISettings() {
 
       <FormControl orientation='horizontal' sx={{ justifyContent: 'space-between' }}>
         <Box>
-          <FormLabel>Enter to send</FormLabel>
-          <FormHelperText>{enterToSend ? <>Sends message<TelegramIcon /></> : 'New line'}</FormHelperText>
+          <FormLabel>Return key to send</FormLabel>
+          <FormHelperText>Shift + return will {enterToSend ? 'add new line' : <>send</>}</FormHelperText>
         </Box>
         <Switch checked={enterToSend} onChange={handleEnterToSendChange}
                 endDecorator={enterToSend ? 'On' : 'Off'}
@@ -119,16 +111,6 @@ export function UISettings() {
                 endDecorator={renderMarkdown ? 'On' : 'Off'}
                 slotProps={{ endDecorator: { sx: { minWidth: 26 } } }} />
       </FormControl>
-
-      {SHOW_PURPOSE_FINDER && <FormControl orientation='horizontal' sx={{ justifyContent: 'space-between' }}>
-        <Box>
-          <FormLabel>Purpose finder</FormLabel>
-          <FormHelperText>{showPurposeFinder ? 'Show search bar' : 'Hide search bar'}</FormHelperText>
-        </Box>
-        <Switch checked={showPurposeFinder} onChange={handleShowSearchBarChange}
-                endDecorator={showPurposeFinder ? 'On' : 'Off'}
-                slotProps={{ endDecorator: { sx: { minWidth: 26 } } }} />
-      </FormControl>}
 
       <FormControl orientation='horizontal' sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Box>
