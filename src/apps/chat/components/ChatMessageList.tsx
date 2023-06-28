@@ -148,7 +148,7 @@ export function ChatMessageList(props: {
       )}
 
       { !showSystemMessages && <Box flexGrow={0}>{buttonToggleSystemPrompt()}</Box> }
-      <Box pb={10}>a</Box> {/* space to scroll under ApplicationBar when viewing a message thread. Can't be paddingTop due to iOS "cleverly" collapsing with viewport edge. Must be inside the scrollable area.  */}
+      <Box pb={10}></Box> {/* space to scroll under ApplicationBar when viewing a message thread. Can't be paddingTop due to iOS "cleverly" collapsing with viewport edge. Must be inside the scrollable area.  */}
 
     </Stack>
 
