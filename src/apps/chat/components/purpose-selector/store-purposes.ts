@@ -18,7 +18,7 @@ export const usePurposeStore = create<PurposeStore>()(
     (set) => ({
 
       // default favorites
-      favoritePurposeIDs: ['Design', 'Develop', 'Hypotheses', 'Prototype', 'Savant', 'UXR'],
+      favoritePurposeIDs: ['Develop', 'Prototype', 'Savant', 'UXDesign', 'UXResearch', 'UXWriter'],
 
       toggleFavoritePurposeId: (purposeId: string) => {
         set(state => {
