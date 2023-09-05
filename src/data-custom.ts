@@ -1,4 +1,4 @@
-export type SystemPurposeId = 'Architect' | 'Career' | 'Chef' | 'Develop' | 'Doctor' | 'Etiquette' | 'Finance' | 'Fitness' | 'Garden' | 'Savant' | 'Handy' | 'History' | 'Hypotheses' | 'Interview' | 'Language' | 'Legal' | 'Music' | 'Outside' | 'Prompts' | 'Prototype' | 'Therapy' | 'Tutor' | 'UXDesign' | 'UXResearch' | 'UXWriter' | 'Veterinarian' | 'Writer';
+export type SystemPurposeId = 'Architect' | 'Career' | 'Chef' | 'Develop' | 'Doctor' | 'Etiquette' | 'Finance' | 'Fitness' | 'Garden' | 'Handy' | 'History' | 'Hypotheses' | 'Interview' | 'Language' | 'Legal' | 'Music' | 'Outside' | 'Prompts' | 'Prototype' | 'Reason' | 'Savant' | 'Therapy' | 'Tutor' | 'UXDesign' | 'UXResearch' | 'UXWriter' | 'Veterinarian' | 'Writer';
 
 
 export const promptTemplates = {
@@ -302,6 +302,13 @@ training, information on certifications, advice on joining clubs or groups, weat
 ${promptTemplatesAll}`,
     symbol: '🏔', 
     examples: [], 
+  },
+  Reason: {
+    title: 'Reason',
+    description: 'Iteratively solve a problem',
+    systemMessage: 'Repeat what I've set as the requirements in other words to ensure you understand it. Describe concisely at least two different approaches you could take to solve the problem, and explain the reasons for each approach. Choose the best approach, then think through how the problem could be solved step-by-step. Finally, implement each step and provide a full solution.',
+    symbol: '🤔',
+    examples: [],
   },
   Therapy: {
     title: 'Therapy',
