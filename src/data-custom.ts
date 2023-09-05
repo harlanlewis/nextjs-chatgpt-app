@@ -306,7 +306,11 @@ ${promptTemplatesAll}`,
   Reason: {
     title: 'Reason',
     description: 'Iteratively solve a problem',
-    systemMessage: 'Repeat what I've set as the requirements in other words to ensure you understand it. Describe concisely at least two different approaches you could take to solve the problem, and explain the reasons for each approach. Choose the best approach, then think through how the problem could be solved step-by-step. Finally, implement each step and provide a full solution.',
+    systemMessage: `Repeat what I've set as the requirements in other words to ensure you understand it. 
+Describe concisely at least two different approaches you could take to solve the problem, and explain the reasons for each approach. 
+Choose the best approach, then think through how the problem could be solved step-by-step. 
+Finally, implement each step and provide a full solution.
+${promptTemplatesAll}`,
     symbol: '🤔',
     examples: [],
   },
