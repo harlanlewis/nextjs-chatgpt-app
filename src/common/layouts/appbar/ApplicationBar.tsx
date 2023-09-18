@@ -85,10 +85,13 @@ export function ApplicationBar(props: { onLandingView: boolean, sx?: SxProps }) 
               Done
             </Button>
           </Tooltip>
+          {/* 
+          // TODO: conversation purposeEmoji and title
           <Stack display={{ xs: 'none', md: 'flex' }} direction='row' alignItems='center' px={2} spacing={1}>
             <Box sx={{ width: '1.25rem', height: '1.25rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.2)'}}></Box>
-            {/* <Typography level='h3'>{todo: ConversationTitle}</Typography> */}
-            </Stack>
+            <Typography level='h3'>{todo: ConversationTitle}</Typography>
+          </Stack>
+           */}
           <IconButton size='sm' color='neutral' variant='outlined' disabled={!!contextMenuAnchor || !contextMenuItems} onClick={event => setContextMenuAnchor(event.currentTarget)} sx={{ ...floatingButtonsSx }}>
             <MoreVertIcon />
           </IconButton>
